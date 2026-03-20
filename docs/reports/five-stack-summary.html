@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Five-Stack Benchmark Summary</title>
+  <style>
+    :root {
+      --bg: #0a1220;
+      --panel: rgba(15, 24, 43, 0.92);
+      --border: rgba(255,255,255,0.08);
+      --text: #eef4ff;
+      --muted: #a9b7d6;
+      --gold: #ffbf47;
+      --teal: #59d2fe;
+      --green: #72e0a5;
+      --red: #ff8a8a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(89,210,254,0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(255,191,71,0.14), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    }
+    .wrap { width: min(1500px, calc(100vw - 32px)); margin: 0 auto; padding: 28px 0 40px; }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+    }
+    .hero { padding: 24px; }
+    .sections { display: grid; gap: 18px; margin-top: 18px; }
+    .panel { padding: 20px; }
+    h1, h2 { margin: 0 0 12px; }
+    p { margin: 0; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-top: 1px solid var(--border); vertical-align: top; text-align: left; }
+    td span { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .winner strong { color: var(--gold); }
+    .positive strong { color: var(--green); }
+    .negative strong { color: var(--red); }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+    .metric { padding: 14px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); }
+    .metric label { display: block; color: var(--teal); margin-bottom: 6px; font-size: 0.9rem; }
+    .metric strong { font-size: 1rem; line-height: 1.45; }
+    .notes { margin: 0; padding-left: 20px; color: var(--muted); }
+    code { font-family: "IBM Plex Mono", monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Five-Stack Benchmark Summary</h1>
+      <p>Spring MVC JDBC platform/virtual, Spring WebFlux R2DBC, Ktor JDBC, and Ktor R2DBC under the same PostgreSQL-backed benchmark scenarios.</p>
+    </section>
+    <div class="sections">
+      
+    <section class="panel">
+      <h2>Tech Stack</h2>
+      <table>
+        <thead><tr><th>System</th><th>Stack</th></tr></thead>
+        <tbody><tr><th>Spring MVC JDBC (platform)</th><td>Tomcat, Jackson, jOOQ, JDBC, HikariCP, platform threads</td></tr><tr><th>Spring MVC JDBC (virtual)</th><td>Tomcat, Jackson, jOOQ, JDBC, HikariCP, virtual threads</td></tr><tr><th>Spring WebFlux R2DBC</th><td>Netty, Jackson, jOOQ SQL builder, R2DBC PostgreSQL, R2DBC pool</td></tr><tr><th>Ktor JDBC</th><td>Netty, kotlinx.serialization, Koin, Exposed JDBC, HikariCP</td></tr><tr><th>Ktor R2DBC</th><td>Netty, kotlinx.serialization, Koin, Exposed R2DBC, R2DBC PostgreSQL</td></tr><tr><th>Benchmark harness</th><td>Custom Kotlin runner, HTML/JSON reports, pg_stat_statements, PostgreSQL 17</td></tr></tbody>
+      </table>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Scenario Map</h2>
+      <table>
+        <thead><tr><th>Scenario</th><th>Type</th><th>Endpoint</th><th>Example Body</th><th>Purpose</th></tr></thead>
+        <tbody><tr><th>health</th><td>Non-DB</td><td><code>GET /health</code></td><td><code>-</code></td><td>Liveness endpoint without DB access.</td></tr><tr><th>smallJson</th><td>Read</td><td><code>GET /api/books/bench/small-json</code></td><td><code>-</code></td><td>Small non-DB JSON serialization path.</td></tr><tr><th>largeJson</th><td>Read</td><td><code>GET /api/books/bench/large-json?limit=200</code></td><td><code>-</code></td><td>Large JSON payload assembly with 200 items.</td></tr><tr><th>bookById</th><td>Read</td><td><code>GET /api/books/{id}</code></td><td><code>-</code></td><td>Single book detail read by primary key.</td></tr><tr><th>bookList</th><td>Read</td><td><code>GET /api/books?limit=50</code></td><td><code>-</code></td><td>List read for 50 books.</td></tr><tr><th>bookList500</th><td>Read</td><td><code>GET /api/books?limit=500</code></td><td><code>-</code></td><td>Large list read for 500 books.</td></tr><tr><th>bookSearch</th><td>Read</td><td><code>GET /api/books/search?q=Book&amp;limit=20</code></td><td><code>-</code></td><td>Search read using title/author filtering.</td></tr><tr><th>aggregateReport</th><td>Read</td><td><code>GET /api/books/bench/aggregate-report?limit=50</code></td><td><code>-</code></td><td>Aggregate or summary style read path.</td></tr><tr><th>checkoutCreate</th><td>Write</td><td><code>POST /api/checkouts</code></td><td><code>{&quot;bookId&quot;:123,&quot;customerName&quot;:&quot;Benchmark User&quot;,&quot;customerEmail&quot;:&quot;bench@example.com&quot;,&quot;quantity&quot;:1}</code></td><td>Write transaction with random book checkout.</td></tr><tr><th>checkoutHotspot</th><td>Write</td><td><code>POST /api/checkouts</code></td><td><code>{&quot;bookId&quot;:1,&quot;customerName&quot;:&quot;Benchmark User&quot;,&quot;customerEmail&quot;:&quot;bench@example.com&quot;,&quot;quantity&quot;:1}</code></td><td>Write contention test on the same book row.</td></tr><tr><th>checkoutDistributed</th><td>Write</td><td><code>POST /api/checkouts</code></td><td><code>{&quot;bookId&quot;:&quot;random&quot;,&quot;customerName&quot;:&quot;Benchmark User&quot;,&quot;customerEmail&quot;:&quot;bench@example.com&quot;,&quot;quantity&quot;:1}</code></td><td>Write-heavy test distributed across many rows.</td></tr></tbody>
+      </table>
+      <ul class="notes"><li>Checkout scenarios share the same POST endpoint and differ only in how benchmark inputs pick book IDs.</li><li>checkoutHotspot is intentionally adversarial: it repeatedly hits the same row and quickly turns into lock contention and stock depletion.</li><li>For checkoutHotspot, high req/s can include many fast failures. Interpret it together with failure count, not as pure successful throughput.</li></ul>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Key Conclusions</h2>
+      <div class="metrics insights"><div class='metric'><label>Blocking JDBC baseline</label><strong>Spring MVC on platform threads remains the main DB-heavy baseline to beat in this repository.</strong></div><div class='metric'><label>Virtual threads</label><strong>Spring MVC virtual threads are still competitive, but they are not automatically faster than platform threads in this workload.</strong></div><div class='metric'><label>Reactive stacks</label><strong>Spring WebFlux R2DBC and Ktor R2DBC need to be interpreted as end-to-end reactive paths, not just framework overhead.</strong></div><div class='metric'><label>Ktor split</label><strong>Ktor JDBC isolates Ktor from R2DBC overhead and helps separate framework cost from driver/ORM cost.</strong></div><div class='metric'><label>Hotspot caution</label><strong>Checkout hotspot includes rapid failures after stock depletion, so success rate matters more than raw req/s.</strong></div></div>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Concurrency 128</h2>
+      <table>
+        <thead><tr><th>Scenario</th><th>Spring MVC platform</th><th>Spring MVC virtual</th><th>Spring WebFlux R2DBC</th><th>Ktor JDBC</th><th>Ktor R2DBC</th></tr></thead>
+        <tbody><tr><th>health</th><td class=""><strong>22,726</strong><span>4.6 ms p95</span><span>0 failures</span></td><td class=""><strong>24,046</strong><span>4.6 ms p95</span><span>0 failures</span></td><td class="winner"><strong>24,664 <em>best</em></strong><span>4.3 ms p95</span><span>0 failures</span></td><td class=""><strong>21,721</strong><span>6.0 ms p95</span><span>0 failures</span></td><td class=""><strong>19,821</strong><span>5.5 ms p95</span><span>0 failures</span></td></tr><tr><th>smallJson</th><td class=""><strong>26,782</strong><span>4.1 ms p95</span><span>0 failures</span></td><td class=""><strong>27,315</strong><span>4.0 ms p95</span><span>0 failures</span></td><td class="winner"><strong>29,049 <em>best</em></strong><span>3.8 ms p95</span><span>0 failures</span></td><td class=""><strong>28,487</strong><span>3.9 ms p95</span><span>0 failures</span></td><td class=""><strong>28,147</strong><span>3.9 ms p95</span><span>0 failures</span></td></tr><tr><th>largeJson</th><td class=""><strong>3,969</strong><span>30.6 ms p95</span><span>0 failures</span></td><td class="winner"><strong>3,987 <em>best</em></strong><span>29.6 ms p95</span><span>0 failures</span></td><td class=""><strong>2,526</strong><span>35.1 ms p95</span><span>0 failures</span></td><td class=""><strong>2,697</strong><span>30.7 ms p95</span><span>0 failures</span></td><td class=""><strong>1,071</strong><span>97.7 ms p95</span><span>0 failures</span></td></tr><tr><th>bookById</th><td class=""><strong>14,396</strong><span>7.0 ms p95</span><span>0 failures</span></td><td class="winner"><strong>15,228 <em>best</em></strong><span>6.1 ms p95</span><span>0 failures</span></td><td class=""><strong>11,940</strong><span>7.8 ms p95</span><span>0 failures</span></td><td class=""><strong>8,381</strong><span>9.6 ms p95</span><span>0 failures</span></td><td class=""><strong>6,269</strong><span>14.6 ms p95</span><span>0 failures</span></td></tr><tr><th>bookList</th><td class=""><strong>8,722</strong><span>12.3 ms p95</span><span>0 failures</span></td><td class="winner"><strong>9,635 <em>best</em></strong><span>10.5 ms p95</span><span>0 failures</span></td><td class=""><strong>5,485</strong><span>19.4 ms p95</span><span>0 failures</span></td><td class=""><strong>5,809</strong><span>14.2 ms p95</span><span>0 failures</span></td><td class=""><strong>3,930</strong><span>22.9 ms p95</span><span>0 failures</span></td></tr><tr><th>bookList500</th><td class=""><strong>2,486</strong><span>43.0 ms p95</span><span>0 failures</span></td><td class="winner"><strong>2,590 <em>best</em></strong><span>40.6 ms p95</span><span>0 failures</span></td><td class=""><strong>1,145</strong><span>83.1 ms p95</span><span>0 failures</span></td><td class=""><strong>1,404</strong><span>55.8 ms p95</span><span>0 failures</span></td><td class=""><strong>774</strong><span>111.0 ms p95</span><span>0 failures</span></td></tr><tr><th>bookSearch</th><td class=""><strong>9,616</strong><span>13.4 ms p95</span><span>0 failures</span></td><td class="winner"><strong>9,740 <em>best</em></strong><span>12.3 ms p95</span><span>0 failures</span></td><td class=""><strong>6,807</strong><span>15.5 ms p95</span><span>0 failures</span></td><td class=""><strong>6,244</strong><span>14.0 ms p95</span><span>0 failures</span></td><td class=""><strong>4,646</strong><span>20.2 ms p95</span><span>0 failures</span></td></tr><tr><th>aggregateReport</th><td class=""><strong>1,083</strong><span>81.8 ms p95</span><span>0 failures</span></td><td class=""><strong>1,099</strong><span>77.7 ms p95</span><span>0 failures</span></td><td class=""><strong>1,027</strong><span>81.1 ms p95</span><span>0 failures</span></td><td class="winner"><strong>1,430 <em>best</em></strong><span>54.6 ms p95</span><span>0 failures</span></td><td class=""><strong>821</strong><span>99.5 ms p95</span><span>0 failures</span></td></tr><tr><th>checkoutCreate</th><td class=""><strong>5,175</strong><span>19.4 ms p95</span><span>0 failures</span></td><td class="winner"><strong>5,181 <em>best</em></strong><span>18.0 ms p95</span><span>0 failures</span></td><td class=""><strong>4,373</strong><span>19.2 ms p95</span><span>0 failures</span></td><td class=""><strong>3,333</strong><span>23.7 ms p95</span><span>0 failures</span></td><td class=""><strong>3,785</strong><span>21.5 ms p95</span><span>0 failures</span></td></tr><tr><th>checkoutHotspot</th><td class=""><strong>2,233</strong><span>52.8 ms p95</span><span>6771 failures</span></td><td class=""><strong>2,267</strong><span>58.5 ms p95</span><span>6841 failures</span></td><td class=""><strong>2,877</strong><span>26.6 ms p95</span><span>8688 failures</span></td><td class="winner"><strong>8,554 <em>best</em></strong><span>9.2 ms p95</span><span>25722 failures</span></td><td class=""><strong>6,353</strong><span>13.1 ms p95</span><span>19102 failures</span></td></tr><tr><th>checkoutDistributed</th><td class="winner"><strong>5,346 <em>best</em></strong><span>18.9 ms p95</span><span>3 failures</span></td><td class=""><strong>5,239</strong><span>17.7 ms p95</span><span>2 failures</span></td><td class=""><strong>4,526</strong><span>18.2 ms p95</span><span>1 failures</span></td><td class=""><strong>3,593</strong><span>22.0 ms p95</span><span>1 failures</span></td><td class=""><strong>4,417</strong><span>18.4 ms p95</span><span>0 failures</span></td></tr></tbody>
+      </table>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Concurrency 256</h2>
+      <table>
+        <thead><tr><th>Scenario</th><th>Spring MVC platform</th><th>Spring MVC virtual</th><th>Spring WebFlux R2DBC</th><th>Ktor JDBC</th><th>Ktor R2DBC</th></tr></thead>
+        <tbody><tr><th>health</th><td class=""><strong>24,939</strong><span>4.5 ms p95</span><span>0 failures</span></td><td class=""><strong>23,417</strong><span>4.6 ms p95</span><span>0 failures</span></td><td class="winner"><strong>25,782 <em>best</em></strong><span>4.4 ms p95</span><span>0 failures</span></td><td class=""><strong>23,455</strong><span>5.1 ms p95</span><span>0 failures</span></td><td class=""><strong>22,312</strong><span>5.5 ms p95</span><span>0 failures</span></td></tr><tr><th>smallJson</th><td class=""><strong>27,695</strong><span>4.0 ms p95</span><span>0 failures</span></td><td class=""><strong>26,837</strong><span>4.0 ms p95</span><span>0 failures</span></td><td class="winner"><strong>29,220 <em>best</em></strong><span>3.8 ms p95</span><span>0 failures</span></td><td class=""><strong>27,853</strong><span>4.0 ms p95</span><span>0 failures</span></td><td class=""><strong>28,015</strong><span>4.0 ms p95</span><span>0 failures</span></td></tr><tr><th>largeJson</th><td class="winner"><strong>4,011 <em>best</em></strong><span>30.8 ms p95</span><span>0 failures</span></td><td class=""><strong>3,980</strong><span>28.7 ms p95</span><span>0 failures</span></td><td class=""><strong>2,552</strong><span>34.3 ms p95</span><span>0 failures</span></td><td class=""><strong>2,741</strong><span>33.3 ms p95</span><span>0 failures</span></td><td class=""><strong>1,389</strong><span>69.2 ms p95</span><span>0 failures</span></td></tr><tr><th>bookById</th><td class=""><strong>14,901</strong><span>6.6 ms p95</span><span>0 failures</span></td><td class="winner"><strong>14,903 <em>best</em></strong><span>6.4 ms p95</span><span>0 failures</span></td><td class=""><strong>12,023</strong><span>8.5 ms p95</span><span>0 failures</span></td><td class=""><strong>8,343</strong><span>10.0 ms p95</span><span>0 failures</span></td><td class=""><strong>7,448</strong><span>12.5 ms p95</span><span>0 failures</span></td></tr><tr><th>bookList</th><td class=""><strong>9,553</strong><span>12.2 ms p95</span><span>0 failures</span></td><td class="winner"><strong>9,574 <em>best</em></strong><span>11.6 ms p95</span><span>0 failures</span></td><td class=""><strong>5,491</strong><span>19.4 ms p95</span><span>0 failures</span></td><td class=""><strong>5,773</strong><span>15.8 ms p95</span><span>0 failures</span></td><td class=""><strong>4,300</strong><span>19.7 ms p95</span><span>0 failures</span></td></tr><tr><th>bookList500</th><td class="winner"><strong>2,526 <em>best</em></strong><span>44.9 ms p95</span><span>0 failures</span></td><td class=""><strong>2,493</strong><span>44.4 ms p95</span><span>0 failures</span></td><td class=""><strong>1,115</strong><span>88.5 ms p95</span><span>0 failures</span></td><td class=""><strong>1,427</strong><span>57.3 ms p95</span><span>0 failures</span></td><td class=""><strong>820</strong><span>97.8 ms p95</span><span>0 failures</span></td></tr><tr><th>bookSearch</th><td class="winner"><strong>9,677 <em>best</em></strong><span>14.2 ms p95</span><span>0 failures</span></td><td class=""><strong>9,418</strong><span>13.3 ms p95</span><span>0 failures</span></td><td class=""><strong>6,889</strong><span>15.1 ms p95</span><span>0 failures</span></td><td class=""><strong>6,020</strong><span>17.7 ms p95</span><span>0 failures</span></td><td class=""><strong>5,359</strong><span>16.7 ms p95</span><span>0 failures</span></td></tr><tr><th>aggregateReport</th><td class=""><strong>1,018</strong><span>87.1 ms p95</span><span>0 failures</span></td><td class=""><strong>1,061</strong><span>83.8 ms p95</span><span>0 failures</span></td><td class=""><strong>1,021</strong><span>84.0 ms p95</span><span>0 failures</span></td><td class="winner"><strong>1,439 <em>best</em></strong><span>56.0 ms p95</span><span>0 failures</span></td><td class=""><strong>834</strong><span>93.8 ms p95</span><span>0 failures</span></td></tr><tr><th>checkoutCreate</th><td class="winner"><strong>5,227 <em>best</em></strong><span>18.8 ms p95</span><span>0 failures</span></td><td class=""><strong>4,911</strong><span>19.2 ms p95</span><span>0 failures</span></td><td class=""><strong>4,493</strong><span>18.2 ms p95</span><span>0 failures</span></td><td class=""><strong>3,540</strong><span>22.4 ms p95</span><span>0 failures</span></td><td class=""><strong>4,044</strong><span>20.3 ms p95</span><span>0 failures</span></td></tr><tr><th>checkoutHotspot</th><td class=""><strong>2,275</strong><span>54.2 ms p95</span><span>6867 failures</span></td><td class=""><strong>2,180</strong><span>55.3 ms p95</span><span>6580 failures</span></td><td class=""><strong>2,883</strong><span>26.3 ms p95</span><span>8705 failures</span></td><td class="winner"><strong>8,522 <em>best</em></strong><span>9.4 ms p95</span><span>25617 failures</span></td><td class=""><strong>6,417</strong><span>12.3 ms p95</span><span>19295 failures</span></td></tr><tr><th>checkoutDistributed</th><td class=""><strong>4,772</strong><span>20.2 ms p95</span><span>3 failures</span></td><td class="winner"><strong>5,126 <em>best</em></strong><span>18.3 ms p95</span><span>1 failures</span></td><td class=""><strong>4,532</strong><span>18.0 ms p95</span><span>2 failures</span></td><td class=""><strong>3,776</strong><span>20.4 ms p95</span><span>1 failures</span></td><td class=""><strong>4,467</strong><span>18.7 ms p95</span><span>3 failures</span></td></tr></tbody>
+      </table>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Scaling: 128 -&gt; 256</h2>
+      <table>
+        <thead><tr><th>Scenario</th><th>Spring MVC platform</th><th>Spring MVC virtual</th><th>Spring WebFlux R2DBC</th><th>Ktor JDBC</th><th>Ktor R2DBC</th></tr></thead>
+        <tbody><tr><th>health</th><td class="positive"><strong>+9.7%</strong><span>22,726 -> 24,939</span></td><td class="negative"><strong>-2.6%</strong><span>24,046 -> 23,417</span></td><td class="positive"><strong>+4.5%</strong><span>24,664 -> 25,782</span></td><td class="positive"><strong>+8.0%</strong><span>21,721 -> 23,455</span></td><td class="positive"><strong>+12.6%</strong><span>19,821 -> 22,312</span></td></tr><tr><th>smallJson</th><td class="positive"><strong>+3.4%</strong><span>26,782 -> 27,695</span></td><td class="negative"><strong>-1.8%</strong><span>27,315 -> 26,837</span></td><td class="positive"><strong>+0.6%</strong><span>29,049 -> 29,220</span></td><td class="negative"><strong>-2.2%</strong><span>28,487 -> 27,853</span></td><td class="negative"><strong>-0.5%</strong><span>28,147 -> 28,015</span></td></tr><tr><th>largeJson</th><td class="positive"><strong>+1.1%</strong><span>3,969 -> 4,011</span></td><td class="negative"><strong>-0.2%</strong><span>3,987 -> 3,980</span></td><td class="positive"><strong>+1.0%</strong><span>2,526 -> 2,552</span></td><td class="positive"><strong>+1.6%</strong><span>2,697 -> 2,741</span></td><td class="positive"><strong>+29.7%</strong><span>1,071 -> 1,389</span></td></tr><tr><th>bookById</th><td class="positive"><strong>+3.5%</strong><span>14,396 -> 14,901</span></td><td class="negative"><strong>-2.1%</strong><span>15,228 -> 14,903</span></td><td class="positive"><strong>+0.7%</strong><span>11,940 -> 12,023</span></td><td class="negative"><strong>-0.5%</strong><span>8,381 -> 8,343</span></td><td class="positive"><strong>+18.8%</strong><span>6,269 -> 7,448</span></td></tr><tr><th>bookList</th><td class="positive"><strong>+9.5%</strong><span>8,722 -> 9,553</span></td><td class="negative"><strong>-0.6%</strong><span>9,635 -> 9,574</span></td><td class="positive"><strong>+0.1%</strong><span>5,485 -> 5,491</span></td><td class="negative"><strong>-0.6%</strong><span>5,809 -> 5,773</span></td><td class="positive"><strong>+9.4%</strong><span>3,930 -> 4,300</span></td></tr><tr><th>bookList500</th><td class="positive"><strong>+1.6%</strong><span>2,486 -> 2,526</span></td><td class="negative"><strong>-3.8%</strong><span>2,590 -> 2,493</span></td><td class="negative"><strong>-2.6%</strong><span>1,145 -> 1,115</span></td><td class="positive"><strong>+1.6%</strong><span>1,404 -> 1,427</span></td><td class="positive"><strong>+5.9%</strong><span>774 -> 820</span></td></tr><tr><th>bookSearch</th><td class="positive"><strong>+0.6%</strong><span>9,616 -> 9,677</span></td><td class="negative"><strong>-3.3%</strong><span>9,740 -> 9,418</span></td><td class="positive"><strong>+1.2%</strong><span>6,807 -> 6,889</span></td><td class="negative"><strong>-3.6%</strong><span>6,244 -> 6,020</span></td><td class="positive"><strong>+15.3%</strong><span>4,646 -> 5,359</span></td></tr><tr><th>aggregateReport</th><td class="negative"><strong>-6.0%</strong><span>1,083 -> 1,018</span></td><td class="negative"><strong>-3.4%</strong><span>1,099 -> 1,061</span></td><td class="negative"><strong>-0.6%</strong><span>1,027 -> 1,021</span></td><td class="positive"><strong>+0.6%</strong><span>1,430 -> 1,439</span></td><td class="positive"><strong>+1.6%</strong><span>821 -> 834</span></td></tr><tr><th>checkoutCreate</th><td class="positive"><strong>+1.0%</strong><span>5,175 -> 5,227</span></td><td class="negative"><strong>-5.2%</strong><span>5,181 -> 4,911</span></td><td class="positive"><strong>+2.7%</strong><span>4,373 -> 4,493</span></td><td class="positive"><strong>+6.2%</strong><span>3,333 -> 3,540</span></td><td class="positive"><strong>+6.8%</strong><span>3,785 -> 4,044</span></td></tr><tr><th>checkoutHotspot</th><td class="positive"><strong>+1.9%</strong><span>2,233 -> 2,275</span></td><td class="negative"><strong>-3.9%</strong><span>2,267 -> 2,180</span></td><td class="positive"><strong>+0.2%</strong><span>2,877 -> 2,883</span></td><td class="negative"><strong>-0.4%</strong><span>8,554 -> 8,522</span></td><td class="positive"><strong>+1.0%</strong><span>6,353 -> 6,417</span></td></tr><tr><th>checkoutDistributed</th><td class="negative"><strong>-10.7%</strong><span>5,346 -> 4,772</span></td><td class="negative"><strong>-2.2%</strong><span>5,239 -> 5,126</span></td><td class="positive"><strong>+0.2%</strong><span>4,526 -> 4,532</span></td><td class="positive"><strong>+5.1%</strong><span>3,593 -> 3,776</span></td><td class="positive"><strong>+1.1%</strong><span>4,417 -> 4,467</span></td></tr></tbody>
+      </table>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Scenario Winners</h2>
+      <table>
+        <thead><tr><th>Scenario</th><th>Winner</th><th>Req/s</th><th>Runner-up</th><th>Gap</th></tr></thead>
+        <tbody><tr><th>health</th><td>Spring WebFlux R2DBC</td><td>25,782</td><td>Spring MVC platform</td><td>+3.4%</td></tr><tr><th>smallJson</th><td>Spring WebFlux R2DBC</td><td>29,220</td><td>Ktor R2DBC</td><td>+4.3%</td></tr><tr><th>largeJson</th><td>Spring MVC platform</td><td>4,011</td><td>Spring MVC virtual</td><td>+0.8%</td></tr><tr><th>bookById</th><td>Spring MVC virtual</td><td>14,903</td><td>Spring MVC platform</td><td>+0.0%</td></tr><tr><th>bookList</th><td>Spring MVC virtual</td><td>9,574</td><td>Spring MVC platform</td><td>+0.2%</td></tr><tr><th>bookList500</th><td>Spring MVC platform</td><td>2,526</td><td>Spring MVC virtual</td><td>+1.3%</td></tr><tr><th>bookSearch</th><td>Spring MVC platform</td><td>9,677</td><td>Spring MVC virtual</td><td>+2.8%</td></tr><tr><th>aggregateReport</th><td>Ktor JDBC</td><td>1,439</td><td>Spring MVC virtual</td><td>+35.6%</td></tr><tr><th>checkoutCreate</th><td>Spring MVC platform</td><td>5,227</td><td>Spring MVC virtual</td><td>+6.4%</td></tr><tr><th>checkoutHotspot</th><td>Ktor JDBC</td><td>8,522</td><td>Ktor R2DBC</td><td>+32.8%</td></tr><tr><th>checkoutDistributed</th><td>Spring MVC virtual</td><td>5,126</td><td>Spring MVC platform</td><td>+7.4%</td></tr></tbody>
+      </table>
+    </section>
+    
+      
+    <section class="panel">
+      <h2>Notes</h2>
+      <ul class="notes"><li>Every run used a fresh PostgreSQL container and the same benchmark scenarios.</li><li>Spring WebFlux uses jOOQ as a SQL builder over DatabaseClient rather than generated jOOQ reactive repositories.</li><li>Ktor aggregate report is still not a fully equivalent DB GROUP BY path, so treat that scenario as directional for Ktor variants.</li><li>The comparison is intentionally stack-level: framework, serialization, DI, ORM/SQL layer, and driver are all part of the measured path.</li></ul>
+    </section>
+    
+    </div>
+  </div>
+</body>
+</html>

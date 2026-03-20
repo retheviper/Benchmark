@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: spring-mvc-jdbc-benchmark
+  datasource:
+    url: jdbc:postgresql://localhost:5432/benchmark?ApplicationName=spring-mvc-jdbc-benchmark
+    username: benchmark
+    password: benchmark
+    hikari:
+      maximum-pool-size: 16
+      minimum-idle: 4
+  jooq:
+    sql-dialect: POSTGRES
+  threads:
+    virtual:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+server:
+  port: 8080
