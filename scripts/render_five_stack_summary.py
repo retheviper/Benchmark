@@ -184,7 +184,7 @@ def render_notes() -> str:
     items = [
         "Every run used a fresh PostgreSQL container and the same benchmark scenarios.",
         "Spring WebFlux uses jOOQ as a SQL builder over DatabaseClient rather than generated jOOQ reactive repositories.",
-        "Ktor aggregate report is still not a fully equivalent DB GROUP BY path, so treat that scenario as directional for Ktor variants.",
+        "aggregateReport now uses DB-side aggregation across all stacks, but framework, serializer, SQL layer, and driver differences remain part of the comparison.",
         "The comparison is intentionally stack-level: framework, serialization, DI, ORM/SQL layer, and driver are all part of the measured path.",
     ]
     return f"""

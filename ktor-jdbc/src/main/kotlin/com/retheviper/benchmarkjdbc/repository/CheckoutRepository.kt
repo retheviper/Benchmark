@@ -35,6 +35,6 @@ class CheckoutRepository {
             it[CheckoutsTable.quantity] = quantity
             it[CheckoutsTable.checkedOutAt] = checkedOutAt
         }
-        CheckoutResponseDto(checkoutId.toString(), bookId, customerName, customerEmail, quantity, checkedOutAt.toString())
+        CheckoutResponseDto(checkoutId.toString(), bookId, customerName, customerEmail, quantity, checkedOutAt)
     }
 }

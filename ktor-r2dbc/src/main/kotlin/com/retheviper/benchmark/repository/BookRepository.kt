@@ -8,17 +8,27 @@ import com.retheviper.benchmark.model.AuthorInventoryReportDto
 import com.retheviper.benchmark.model.BookDetailDto
 import com.retheviper.benchmark.model.BookSummaryDto
 import com.retheviper.benchmark.model.LargePayloadItemDto
+import org.jetbrains.exposed.v1.core.alias
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.avg
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 class BookRepository {
+    private val authorBookCount = BooksTable.id.count().alias("book_count")
+    private val authorTotalStock = BooksTable.stock.sum().alias("total_stock")
+    private val authorAveragePrice = BooksTable.priceCents.avg().alias("average_price")
+
     suspend fun findById(id: Long): BookDetailDto? {
         return suspendTransaction(db = BenchmarkDatabase.database) {
             joinedQuery()
@@ -43,8 +53,10 @@ class BookRepository {
     suspend fun search(query: String, limit: Int): List<BookSummaryDto> {
         val pattern = "%${query.trim()}%"
         return suspendTransaction(db = BenchmarkDatabase.database) {
+            val lowerTitle = BooksTable.title.lowerCase()
+            val lowerAuthorName = AuthorsTable.name.lowerCase()
             joinedQuery()
-                .where { (BooksTable.title like pattern) or (AuthorsTable.name like pattern) }
+                .where { (lowerTitle like pattern.lowercase()) or (lowerAuthorName like pattern.lowercase()) }
                 .orderBy(BooksTable.id to SortOrder.ASC)
                 .limit(limit)
                 .toList()
@@ -63,20 +75,27 @@ class BookRepository {
     }
 
     suspend fun authorInventory(limit: Int): List<AuthorInventoryReportDto> {
-        return listLargePayloadItems(limit * 10)
-            .groupBy { it.authorName }
-            .entries
-            .mapIndexed { index, entry ->
-                AuthorInventoryReportDto(
-                    authorId = index + 1L,
-                    authorName = entry.key,
-                    bookCount = entry.value.size,
-                    totalStock = entry.value.sumOf { it.stock },
-                    averagePriceCents = entry.value.map { it.priceCents }.average().toInt(),
-                )
-            }
-            .sortedWith(compareByDescending<AuthorInventoryReportDto> { it.bookCount }.thenBy { it.authorName })
-            .take(limit)
+        return suspendTransaction(db = BenchmarkDatabase.database) {
+            BooksTable.join(
+                otherTable = AuthorsTable,
+                joinType = JoinType.INNER,
+                additionalConstraint = { BooksTable.authorId eq AuthorsTable.id },
+            )
+                .select(AuthorsTable.id, AuthorsTable.name, authorBookCount, authorTotalStock, authorAveragePrice)
+                .groupBy(AuthorsTable.id, AuthorsTable.name)
+                .orderBy(authorBookCount to SortOrder.DESC, AuthorsTable.id to SortOrder.ASC)
+                .limit(limit)
+                .toList()
+                .map {
+                    AuthorInventoryReportDto(
+                        authorId = it[AuthorsTable.id],
+                        authorName = it[AuthorsTable.name],
+                        bookCount = it[authorBookCount].toInt(),
+                        totalStock = it[authorTotalStock] ?: 0,
+                        averagePriceCents = it[authorAveragePrice]?.toInt() ?: 0,
+                    )
+                }
+        }
     }
 
     private fun joinedQuery() =
@@ -92,7 +111,7 @@ class BookRepository {
         authorName = this[AuthorsTable.name],
         priceCents = this[BooksTable.priceCents],
         stock = this[BooksTable.stock],
-        publishedAt = this[BooksTable.publishedAt].toString(),
+        publishedAt = this[BooksTable.publishedAt],
     )
 
     private fun ResultRow.toDetail(): BookDetailDto = BookDetailDto(
@@ -107,7 +126,7 @@ class BookRepository {
         ),
         priceCents = this[BooksTable.priceCents],
         stock = this[BooksTable.stock],
-        publishedAt = this[BooksTable.publishedAt].toString(),
+        publishedAt = this[BooksTable.publishedAt],
     )
 
     private fun ResultRow.toLargePayloadItem(): LargePayloadItemDto = LargePayloadItemDto(
@@ -115,7 +134,7 @@ class BookRepository {
         title = this[BooksTable.title],
         authorName = this[AuthorsTable.name],
         description = this[BooksTable.description],
-        publishedAt = this[BooksTable.publishedAt].toString(),
+        publishedAt = this[BooksTable.publishedAt],
         priceCents = this[BooksTable.priceCents],
         stock = this[BooksTable.stock],
     )

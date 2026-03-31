@@ -1,6 +1,8 @@
 package com.retheviper.benchmark.model
 
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
+import java.time.OffsetDateTime
 
 @Serializable
 data class HealthResponse(
@@ -21,7 +23,8 @@ data class BookSummaryDto(
     val authorName: String,
     val priceCents: Int,
     val stock: Int,
-    val publishedAt: String,
+    @Serializable(with = LocalDateIsoSerializer::class)
+    val publishedAt: LocalDate,
 )
 
 @Serializable
@@ -33,7 +36,8 @@ data class BookDetailDto(
     val author: AuthorDto,
     val priceCents: Int,
     val stock: Int,
-    val publishedAt: String,
+    @Serializable(with = LocalDateIsoSerializer::class)
+    val publishedAt: LocalDate,
 )
 
 @Serializable
@@ -51,7 +55,8 @@ data class CheckoutResponseDto(
     val customerName: String,
     val customerEmail: String,
     val quantity: Int,
-    val checkedOutAt: String,
+    @Serializable(with = OffsetDateTimeIsoSerializer::class)
+    val checkedOutAt: OffsetDateTime,
 )
 
 @Serializable
@@ -87,7 +92,8 @@ data class LargePayloadItemDto(
     val title: String,
     val authorName: String,
     val description: String,
-    val publishedAt: String,
+    @Serializable(with = LocalDateIsoSerializer::class)
+    val publishedAt: LocalDate,
     val priceCents: Int,
     val stock: Int,
 )

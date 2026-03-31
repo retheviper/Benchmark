@@ -40,8 +40,8 @@ class CheckoutRepository {
             CheckoutsTable.insert { statement ->
                 statement[id] = checkoutId
                 statement[CheckoutsTable.bookId] = bookId
-                statement[CheckoutsTable.customerName] = customerName.trim()
-                statement[CheckoutsTable.customerEmail] = customerEmail.trim()
+                statement[CheckoutsTable.customerName] = customerName
+                statement[CheckoutsTable.customerEmail] = customerEmail
                 statement[CheckoutsTable.quantity] = quantity
                 statement[CheckoutsTable.checkedOutAt] = checkedOutAt
             }
@@ -49,10 +49,10 @@ class CheckoutRepository {
             CheckoutResponseDto(
                 id = checkoutId.toString(),
                 bookId = bookId,
-                customerName = customerName.trim(),
-                customerEmail = customerEmail.trim(),
+                customerName = customerName,
+                customerEmail = customerEmail,
                 quantity = quantity,
-                checkedOutAt = checkedOutAt.toString(),
+                checkedOutAt = checkedOutAt,
             )
         }
     }
