@@ -8,6 +8,7 @@ import com.retheviper.benchmark.db.CheckoutsTable
 import com.retheviper.benchmark.model.CheckoutResponseDto
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
@@ -20,6 +21,7 @@ class CheckoutRepository {
         return suspendTransaction(db = BenchmarkDatabase.database) {
             val book = BooksTable.selectAll()
                 .where { BooksTable.id eq bookId }
+                .forUpdate(ForUpdateOption.PostgreSQL.ForUpdate())
                 .limit(1)
                 .toList()
                 .singleOrNull()
